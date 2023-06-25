@@ -11,7 +11,10 @@ import {
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  Pagination,
+  PaginationProps,
+  StrictInputProps
 } from 'semantic-ui-react'
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
@@ -27,17 +30,40 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  currentPage: number
+  itemsPerPage: number
+  pageKey: any
+  lastKey: string
+  totalPages: number
+  totalItems: number
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    currentPage: 1,
+    itemsPerPage: 5,
+    pageKey: {},
+    lastKey: '',
+    totalPages: 1,
+    totalItems: 0
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value })
+  }
+
+  handlePageChange = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    data: PaginationProps
+  ) => {
+    // Handle page change logic here
+    const page = data.activePage as number
+    const key = this.state.pageKey[page] ?? ''
+
+    this.getPage(page, key)
   }
 
   onEditButtonClick = (todoId: string) => {
@@ -89,13 +115,25 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     }
   }
 
-  async componentDidMount() {
+  getPage = async (page: number, key = '') => {
+    const todos = await getTodos(this.props.auth.getIdToken(), key)
+    const totalPages = Math.floor(todos.totalItems / todos.itemsLimit) + 1
+    let { pageKey } = this.state
+    pageKey[page + 1] = todos.lastKey
+
+    this.setState({
+      currentPage: page,
+      todos: todos.items,
+      pageKey: pageKey,
+      totalPages: totalPages,
+      totalItems: todos.totalItems,
+      loadingTodos: false
+    })
+  }
+
+  componentDidMount() {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
-      this.setState({
-        todos,
-        loadingTodos: false
-      })
+      this.getPage(this.state.currentPage)
     } catch (e) {
       alert(`Failed to fetch todos: ${(e as Error).message}`)
     }
@@ -103,13 +141,37 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   render() {
     return (
-      <div>
-        <Header as="h1">TODOs</Header>
+      <div className='pt-4 font-bold'>
+        <Header as='h1' className='font-bold'>
+          TODOs ({this.state.totalItems ?? 0})
+        </Header>
 
         {this.renderCreateTodoInput()}
 
         {this.renderTodos()}
+
+        <p className='font-bold'>
+          Page {this.state.currentPage} of {this.state.totalPages}
+        </p>
+        {this.renderPagination()}
       </div>
+    )
+  }
+
+  renderPagination() {
+    return (
+      <Grid.Row>
+        <Pagination
+          firstItem={null}
+          lastItem={null}
+          ellipsisItem={null}
+          siblingRange={0}
+          boundaryRange={0}
+          onPageChange={this.handlePageChange}
+          defaultActivePage={1}
+          totalPages={this.state.totalPages}
+        />
+      </Grid.Row>
     )
   }
 
@@ -120,14 +182,14 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
           <Input
             action={{
               color: 'teal',
-              labelPosition: 'left',
+              labelPosition: 'right',
               icon: 'add',
-              content: 'New task',
+              content: 'Save task',
               onClick: this.onTodoCreate
             }}
             fluid
-            actionPosition="left"
-            placeholder="To change the world..."
+            placeholder='Add a new task...'
+            value={this.state.newTodoName}
             onChange={this.handleNameChange}
           />
         </Grid.Column>
@@ -149,7 +211,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   renderLoading() {
     return (
       <Grid.Row>
-        <Loader indeterminate active inline="centered">
+        <Loader indeterminate active inline='centered'>
           Loading TODOs
         </Loader>
       </Grid.Row>
@@ -158,50 +220,50 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   renderTodosList() {
     return (
-      <Grid padded>
+      <div>
         {this.state.todos.map((todo, pos) => {
           return (
-            <Grid.Row key={todo.todoId}>
-              <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onTodoCheck(pos)}
-                  checked={todo.done}
-                />
-              </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
-                {todo.name}
-              </Grid.Column>
-              <Grid.Column width={3} floated="right">
-                {todo.dueDate}
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
-                >
-                  <Icon name="pencil" />
-                </Button>
-              </Grid.Column>
-              <Grid.Column width={1} floated="right">
-                <Button
-                  icon
-                  color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
-                >
-                  <Icon name="delete" />
-                </Button>
-              </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
-              )}
-              <Grid.Column width={16}>
-                <Divider />
-              </Grid.Column>
-            </Grid.Row>
+            <div className='w-full' key={todo.todoId}>
+              <div className='flex w-full'>
+                <div className='flex items-center flex-shrink w-auto'>
+                  <Checkbox
+                    className='mt-1'
+                    toggle
+                    onChange={() => this.onTodoCheck(pos)}
+                    checked={todo.done}
+                  />
+                </div>
+                <div className='flex-auto flex items-center text-left px-8'>
+                  {todo.attachmentUrl && (
+                    <Image src={todo.attachmentUrl} size='small' wrapped />
+                  )}
+                  {todo.name}
+                </div>
+                <div className='flex items-center flex-shrink w-auto px-8'>
+                  {todo.dueDate}
+                </div>
+                <div className='flex items-center flex-shrink w-auto'>
+                  <Button
+                    icon
+                    color='blue'
+                    onClick={() => this.onEditButtonClick(todo.todoId)}
+                  >
+                    <Icon name='pencil' />
+                  </Button>
+                  <Button
+                    icon
+                    color='red'
+                    onClick={() => this.onTodoDelete(todo.todoId)}
+                  >
+                    <Icon name='delete' />
+                  </Button>
+                </div>
+              </div>
+              <Divider />
+            </div>
           )
         })}
-      </Grid>
+      </div>
     )
   }
 

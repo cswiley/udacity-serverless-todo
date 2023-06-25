@@ -1,7 +1,8 @@
 import * as React from 'react'
-import { Form, Button } from 'semantic-ui-react'
+import { Form, Button, Grid} from 'semantic-ui-react'
 import Auth from '../auth/Auth'
 import { getUploadUrl, uploadFile } from '../api/todos-api'
+import { History } from 'history'
 
 enum UploadState {
   NoUpload,
@@ -15,6 +16,7 @@ interface EditTodoProps {
       todoId: string
     }
   }
+  history: History
   auth: Auth
 }
 
@@ -27,18 +29,28 @@ export class EditTodo extends React.PureComponent<
   EditTodoProps,
   EditTodoState
 > {
+
+  fileInputRef: React.RefObject<HTMLInputElement>  = React.createRef();
+
   state: EditTodoState = {
     file: undefined,
-    uploadState: UploadState.NoUpload
+    uploadState: UploadState.NoUpload,
   }
+
 
   handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (!files) return
 
+    console.log(files[0])
     this.setState({
       file: files[0]
     })
+  }
+
+  handleCancel = (event: React.SyntheticEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    this.props.history.push(`/`)
   }
 
   handleSubmit = async (event: React.SyntheticEvent) => {
@@ -55,8 +67,18 @@ export class EditTodo extends React.PureComponent<
 
       this.setUploadState(UploadState.UploadingFile)
       await uploadFile(uploadUrl, this.state.file)
+      const fileInput = this.fileInputRef.current;
+
+      // Reset the value of the file input
+      if (fileInput) {
+        fileInput.value = '';
+      }
 
       alert('File was uploaded!')
+      
+      // Go back to todo list 
+      this.props.history.push(`/`)
+
     } catch (e) {
       alert('Could not upload a file: ' + (e as Error).message)
     } finally {
@@ -83,10 +105,16 @@ export class EditTodo extends React.PureComponent<
               accept="image/*"
               placeholder="Image to upload"
               onChange={this.handleFileChange}
+              ref={this.fileInputRef}
             />
           </Form.Field>
 
-          {this.renderButton()}
+          <Grid padded>
+            <Grid.Row>
+                {this.renderButton()}
+                {this.renderCancelButton()}
+            </Grid.Row>
+          </Grid>
         </Form>
       </div>
     )
@@ -103,6 +131,20 @@ export class EditTodo extends React.PureComponent<
           type="submit"
         >
           Upload
+        </Button>
+      </div>
+    )
+  }
+
+  renderCancelButton() {
+
+    return (
+      <div>
+        <Button
+          type="reset"
+          onClick={this.handleCancel}
+        >
+          Cancel
         </Button>
       </div>
     )
