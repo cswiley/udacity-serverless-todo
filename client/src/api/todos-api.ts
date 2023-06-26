@@ -30,8 +30,6 @@ export async function getTodos(
   key: string,
   limit: number = 10
 ): Promise<any> {
-  console.log('Fetching todos starting as key:', key || '')
-
   try {
     const response = await Axios.get(`${apiEndpoint}/todos`, {
       params: {
@@ -43,7 +41,6 @@ export async function getTodos(
         Authorization: `Bearer ${idToken}`
       }
     })
-    console.log('Todos:', response.data)
     return {
       items: response.data.items,
       lastKey: response.data.lastKey ?? '',
