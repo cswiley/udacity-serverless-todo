@@ -234,10 +234,12 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                   />
                 </div>
                 <div className='flex-auto flex items-center text-left px-8'>
-                  {todo.attachmentUrl && (
-                    <Image src={todo.attachmentUrl} size='small' wrapped />
-                  )}
                   {todo.name}
+                  {todo.attachmentUrl && (
+                    <div className='pl-4'>
+                      <Image src={todo.attachmentUrl} size='small' wrapped />
+                    </div>
+                  )}
                 </div>
                 <div className='flex items-center flex-shrink w-auto px-8'>
                   {todo.dueDate}

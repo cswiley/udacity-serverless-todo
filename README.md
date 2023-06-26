@@ -1,5 +1,85 @@
 # Serverless TODO
 
+## Project Submission - Rubric
+
+### Step 1 - Functionality
+
+[x] The application allows users to create, update, delete TODO items
+
+- A user of the web application can use the interface to create, delete and complete a TODO item.
+
+[x] The application allows users to upload a file.
+
+- A user of the web interface can click on a "pencil" button, then select and upload a file. A file should appear in the list of TODO items on the home page.
+
+[x] The application only displays TODO items for a logged in user.
+
+- If you log out from a current user and log in as a different user, the application should not show TODO items created by the first account.
+
+[x] Authentication is implemented and does not allow unauthenticated access.
+
+- A user needs to authenticate in order to use an application.
+
+### Step 2 - Code Base
+
+[x] The code is split into multiple layers separating business logic from I/O related code.
+
+- Code of Lambda functions is split into multiple files/classes. The business logic of an application is separated from code for database access, file storage, and code related to AWS Lambda.
+
+[x] Code is implemented using async/await and Promises without using callbacks.
+
+- To get results of asynchronous operations, a student is using async/await constructs instead of passing callbacks.
+
+### Step 3 - Best Practices
+
+[x] All resources in the application are defined in the "serverless.yml" file
+
+- All resources needed by an application are defined in the "serverless.yml". A developer does not need to create them manually using AWS console.
+
+[x] Each function has its own set of permissions.
+
+- Instead of defining all permissions under provider/iamRoleStatements, permissions are defined per function in the functions section of the "serverless.yml".
+
+[x] Application has sufficient monitoring.
+
+- Application has at least some of the following:
+
+  - Distributed tracing is enabled
+  - It has a sufficient amount of log statements
+  - It generates application level metrics
+
+[x] HTTP requests are validated
+
+- Incoming HTTP requests are validated either in Lambda handlers or using request validation in API Gateway. The latter can be done either using the serverless-reqvalidator-plugin or by providing request schemas in function definitions.
+
+### Step 4 - Architecture
+
+[x] Data is stored in a table with a composite key.
+
+- 1:M (1 to many) relationship between users and TODO items is modeled using a DynamoDB table that has a composite key with both partition and sort keys. Should be defined similar to this:
+
+- KeySchema:
+  - AttributeName: partitionKey
+  - KeyType: HASH
+  - AttributeName: sortKey
+  - KeyType: RANGE
+
+[x] Scan operation is not used to read data from a database.
+
+- TODO items are fetched using the "query()" method and not "scan()" method (which is less efficient on large datasets)
+
+### Suggestions to Make Your Project Stand Out
+
+[x] Fetch a certificate from Auth0 instead of hard coding it in an authorizer.
+
+[x] Implement pagination support to work around a DynamoDB limitation that allows up to 1MB of data using a query method.
+
+<br>
+<hr>
+<br>
+
+# Project Info
+
 To implement this project, you need to implement a simple TODO application using AWS Lambda and Serverless framework. Search for all comments starting with the `TODO:` in the code to find the placeholders that you need to implement.
 
 # Functionality of the application
@@ -10,43 +90,43 @@ This application will allow creating/removing/updating/fetching TODO items. Each
 
 The application should store TODO items, and each TODO item contains the following fields:
 
-* `todoId` (string) - a unique id for an item
-* `createdAt` (string) - date and time when an item was created
-* `name` (string) - name of a TODO item (e.g. "Change a light bulb")
-* `dueDate` (string) - date and time by which an item should be completed
-* `done` (boolean) - true if an item was completed, false otherwise
-* `attachmentUrl` (string) (optional) - a URL pointing to an image attached to a TODO item
+- `todoId` (string) - a unique id for an item
+- `createdAt` (string) - date and time when an item was created
+- `name` (string) - name of a TODO item (e.g. "Change a light bulb")
+- `dueDate` (string) - date and time by which an item should be completed
+- `done` (boolean) - true if an item was completed, false otherwise
+- `attachmentUrl` (string) (optional) - a URL pointing to an image attached to a TODO item
 
 You might also store an id of a user who created a TODO item.
 
 ## Prerequisites
 
-* <a href="https://manage.auth0.com/" target="_blank">Auth0 account</a>
-* <a href="https://github.com" target="_blank">GitHub account</a>
-* <a href="https://nodejs.org/en/download/package-manager/" target="_blank">NodeJS</a> version up to 12.xx 
-* Serverless 
-   * Create a <a href="https://dashboard.serverless.com/" target="_blank">Serverless account</a> user
-   * Install the Serverless Framework’s CLI  (up to VERSION=2.21.1). Refer to the <a href="https://www.serverless.com/framework/docs/getting-started/" target="_blank">official documentation</a> for more help.
-   ```bash
-   npm install -g serverless@2.21.1
-   serverless --version
-   ```
-   * Login and configure serverless to use the AWS credentials 
-   ```bash
-   # Login to your dashboard from the CLI. It will ask to open your browser and finish the process.
-   serverless login
-   # Configure serverless to use the AWS credentials to deploy the application
-   # You need to have a pair of Access key (YOUR_ACCESS_KEY_ID and YOUR_SECRET_KEY) of an IAM user with Admin access permissions
-   sls config credentials --provider aws --key YOUR_ACCESS_KEY_ID --secret YOUR_SECRET_KEY --profile serverless
-   ```
-   
+- <a href="https://manage.auth0.com/" target="_blank">Auth0 account</a>
+- <a href="https://github.com" target="_blank">GitHub account</a>
+- <a href="https://nodejs.org/en/download/package-manager/" target="_blank">NodeJS</a> version up to 12.xx
+- Serverless
+  - Create a <a href="https://dashboard.serverless.com/" target="_blank">Serverless account</a> user
+  - Install the Serverless Framework’s CLI (up to VERSION=2.21.1). Refer to the <a href="https://www.serverless.com/framework/docs/getting-started/" target="_blank">official documentation</a> for more help.
+  ```bash
+  npm install -g serverless@2.21.1
+  serverless --version
+  ```
+  - Login and configure serverless to use the AWS credentials
+  ```bash
+  # Login to your dashboard from the CLI. It will ask to open your browser and finish the process.
+  serverless login
+  # Configure serverless to use the AWS credentials to deploy the application
+  # You need to have a pair of Access key (YOUR_ACCESS_KEY_ID and YOUR_SECRET_KEY) of an IAM user with Admin access permissions
+  sls config credentials --provider aws --key YOUR_ACCESS_KEY_ID --secret YOUR_SECRET_KEY --profile serverless
+  ```
+
 # Functions to be implemented
 
 To implement this project, you need to implement the following functions and configure them in the `serverless.yml` file:
 
-* `Auth` - this function should implement a custom authorizer for API Gateway that should be added to all other functions.
+- `Auth` - this function should implement a custom authorizer for API Gateway that should be added to all other functions.
 
-* `GetTodos` - should return all TODOs for a current user. A user id can be extracted from a JWT token that is sent by the frontend
+- `GetTodos` - should return all TODOs for a current user. A user id can be extracted from a JWT token that is sent by the frontend
 
 It should return data that looks like this:
 
@@ -68,12 +148,12 @@ It should return data that looks like this:
       "dueDate": "2019-07-29T20:01:45.424Z",
       "done": true,
       "attachmentUrl": "http://example.com/image.png"
-    },
+    }
   ]
 }
 ```
 
-* `CreateTodo` - should create a new TODO for a current user. A shape of data send by a client application to this function can be found in the `CreateTodoRequest.ts` file
+- `CreateTodo` - should create a new TODO for a current user. A shape of data send by a client application to this function can be found in the `CreateTodoRequest.ts` file
 
 It receives a new TODO item to be created in JSON format that looks like this:
 
@@ -102,7 +182,7 @@ It should return a new TODO item that looks like this:
 }
 ```
 
-* `UpdateTodo` - should update a TODO item created by a current user. A shape of data send by a client application to this function can be found in the `UpdateTodoRequest.ts` file
+- `UpdateTodo` - should update a TODO item created by a current user. A shape of data send by a client application to this function can be found in the `UpdateTodoRequest.ts` file
 
 It receives an object that contains three fields that can be updated in a TODO item:
 
@@ -118,11 +198,11 @@ The id of an item that should be updated is passed as a URL parameter.
 
 It should return an empty body.
 
-* `DeleteTodo` - should delete a TODO item created by a current user. Expects an id of a TODO item to remove.
+- `DeleteTodo` - should delete a TODO item created by a current user. Expects an id of a TODO item to remove.
 
 It should return an empty body.
 
-* `GenerateUploadUrl` - returns a pre-signed URL that can be used to upload an attachment file for a TODO item.
+- `GenerateUploadUrl` - returns a pre-signed URL that can be used to upload an attachment file for a TODO item.
 
 It should return a JSON object that looks like this:
 
@@ -137,7 +217,6 @@ All functions are already connected to appropriate events from API Gateway.
 An id of a user can be extracted from a JWT token passed by a client.
 
 You also need to add any necessary resources to the `resources` section of the `serverless.yml` file such as DynamoDB table and S3 bucket.
-
 
 # Frontend
 
@@ -180,21 +259,19 @@ logger.info('User was authorized', {
 })
 ```
 
-
 # Grading the submission
 
 Once you have finished developing your application, please set `apiId` and Auth0 parameters in the `config.ts` file in the `client` folder. A reviewer would start the React development server to run the frontend that should be configured to interact with your serverless application.
 
 **IMPORTANT**
 
-*Please leave your application running until a submission is reviewed. If implemented correctly it will cost almost nothing when your application is idle.*
+_Please leave your application running until a submission is reviewed. If implemented correctly it will cost almost nothing when your application is idle._
 
 # Suggestions
 
 To store TODO items, you might want to use a DynamoDB table with local secondary index(es). A create a local secondary index you need to create a DynamoDB resource like this:
 
 ```yml
-
 TodosTable:
   Type: AWS::DynamoDB::Table
   Properties:
@@ -221,7 +298,6 @@ TodosTable:
             KeyType: RANGE
         Projection:
           ProjectionType: ALL # What attributes will be copied to an index
-
 ```
 
 To query an index you need to use the `query()` method like:
@@ -269,23 +345,20 @@ An alternative way to test your API, you can use the Postman collection that con
 
 Click on the import button:
 
-![Alt text](images/import-collection-1.png?raw=true "Image 1")
-
+![Alt text](images/import-collection-1.png?raw=true 'Image 1')
 
 Click on the "Choose Files":
 
-![Alt text](images/import-collection-2.png?raw=true "Image 2")
-
+![Alt text](images/import-collection-2.png?raw=true 'Image 2')
 
 Select a file to import:
 
-![Alt text](images/import-collection-3.png?raw=true "Image 3")
-
+![Alt text](images/import-collection-3.png?raw=true 'Image 3')
 
 Right click on the imported collection to set variables for the collection:
 
-![Alt text](images/import-collection-4.png?raw=true "Image 4")
+![Alt text](images/import-collection-4.png?raw=true 'Image 4')
 
 Provide variables for the collection (similarly to how this was done in the course):
 
-![Alt text](images/import-collection-5.png?raw=true "Image 5")
+![Alt text](images/import-collection-5.png?raw=true 'Image 5')
