@@ -24,13 +24,10 @@ export const handler = middy(
     try {
       const lastKey = event.queryStringParameters?.lastKey ?? null
       const limit: number = (event.queryStringParameters?.limit ?? -1) as number
-      console.log('lastKey:', lastKey)
-      console.log('limit:', lastKey)
 
       const userId = extractUserIdFromAuthHeader(event.headers.Authorization)
 
       const result = await getAllTodos(userId, lastKey, limit)
-      console.log('result:', result)
 
       return {
         statusCode: 200,

@@ -63,13 +63,22 @@ functions:
           - dynamodb:Scan
           - dynamodb:GetItem
           - dynamodb:Query
-        Resource: !Join
-          - ""
-          - - "arn:aws:dynamodb:"
-            - !Ref AWS::Region
-            - ":*:"
-            - "table/"
-            - !Ref TodosTable
+        Resource:
+          - !Join
+            - ""
+            - - "arn:aws:dynamodb:"
+              - !Ref AWS::Region
+              - ":*:"
+              - "table/"
+              - !Ref TodosTable
+          - !Join
+            - ""
+            - - "arn:aws:dynamodb:"
+              - !Ref AWS::Region
+              - ":*:"
+              - "table/"
+              - !Ref TodosTable
+              - "/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}"
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler

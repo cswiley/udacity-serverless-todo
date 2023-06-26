@@ -12,7 +12,6 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
   const decoded = decode(token, { complete: true }) as Jwt
   const key = await client.getSigningKey(decoded.header.kid)
   const signingKey = key.getPublicKey()
-  console.log(signingKey)
 
   return new Promise((resolve, reject) => {
     verify(token, signingKey, { algorithms: ['RS256'] }, (err, decoded) => {

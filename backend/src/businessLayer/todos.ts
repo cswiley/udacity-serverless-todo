@@ -25,7 +25,7 @@ export async function getAllTodos(
 ): Promise<any> {
   logger.info(`Getting all todos for user: ${userId}`)
   try {
-    return todoAccess.getAllTodos(userId, lastKey, limit)
+    return await todoAccess.getAllTodos(userId, lastKey, limit)
   } catch (error) {
     logger.error('Error in getAllTodos', { error })
     throw new createError.InternalServerError(error)
